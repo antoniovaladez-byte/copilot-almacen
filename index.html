@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>Copilot de Almacén</title>
+
+<style>
+
+body{
+    font-family:Arial,sans-serif;
+    background:#eef2f7;
+    text-align:center;
+    padding:40px;
+}
+
+h1{
+    color:#003A8C;
+}
+
+button{
+    padding:20px 40px;
+    font-size:24px;
+    border:none;
+    border-radius:12px;
+    background:#003A8C;
+    color:white;
+    cursor:pointer;
+}
+
+button:hover{
+    background:#002b66;
+}
+
+#texto{
+    margin-top:30px;
+    font-size:28px;
+    font-weight:bold;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<h1>🤖 Copilot de Almacén</h1>
+
+<button onclick="escuchar()">
+🎤 Hablar
+</button>
+
+<div id="texto">
+Esperando comando...
+</div>
+
+<script>
+
+function escuchar(){
+
+    const SpeechRecognition =
+        window.SpeechRecognition ||
+        window.webkitSpeechRecognition;
+
+    if(!SpeechRecognition){
+
+        alert("Reconocimiento de voz no disponible");
+
+        return;
+    }
+
+    const recognition =
+        new SpeechRecognition();
+
+    recognition.lang = "es-MX";
+
+    recognition.start();
+
+    recognition.onresult = function(event){
+
+        let texto =
+            event.results[0][0].transcript;
+
+        document.getElementById("texto").innerHTML =
+            "Escuché: " + texto;
+
+    };
+
+}
+
+</script>
+
+</body>
+</html>
