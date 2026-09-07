@@ -1,10 +1,14 @@
 <!DOCTYPE html>
 <html>
+
 <head>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<title>Copilot de Almacén</title>
+<title>
+Copilot de Almacén
+</title>
 
 <style>
 
@@ -29,14 +33,17 @@ button{
     cursor:pointer;
 }
 
-button:hover{
-    background:#002b66;
-}
-
-#texto{
+#respuesta{
     margin-top:30px;
     font-size:28px;
     font-weight:bold;
+}
+
+.card{
+    background:white;
+    padding:25px;
+    border-radius:15px;
+    margin-top:20px;
 }
 
 </style>
@@ -45,51 +52,144 @@ button:hover{
 
 <body>
 
-<h1>🤖 Copilot de Almacén</h1>
+<h1>
+🤖 Copilot de Almacén
+</h1>
 
 <button onclick="escuchar()">
 🎤 Hablar
 </button>
 
-<div id="texto">
-Esperando comando...
+<div id="respuesta" class="card">
+
+Esperando consulta...
+
 </div>
 
 <script>
 
+const API_URL =
+"https://script.google.com/macros/s/AKfycbyDRzY_RdNrnsraSCqJPT1Brs6nrrZPytWM3PuB7biGwOrR2RURaJoIKGjA4g_PzKUDdA/exec";
+
+function hablar(texto){
+
+    const voz =
+      new SpeechSynthesisUtterance(texto);
+
+    voz.lang = "es-MX";
+
+    speechSynthesis.speak(voz);
+
+}
+
+async function consultar(valor){
+
+    try{
+
+        const url =
+            API_URL +
+            "?api=1&buscar=" +
+            encodeURIComponent(valor);
+
+        const respuesta =
+            await fetch(url);
+
+        const datos =
+            await respuesta.json();
+
+        if(datos.encontrado === false){
+
+            document
+              .getElementById("respuesta")
+              .innerHTML =
+              "No encontré información";
+
+            hablar(
+              "No encontré información"
+            );
+
+            return;
+        }
+
+        const texto =
+
+            "Proveedor " +
+            datos.proveedor +
+            "<br><br>" +
+
+            "Número " +
+            datos.numeroProveedor +
+            "<br><br>" +
+
+            "Ubicación " +
+            datos.ubicacion +
+            "<br><br>" +
+
+            "Ruta " +
+            datos.ruta +
+            "<br><br>" +
+
+            "Altura " +
+            datos.alturaMaxima;
+
+        document
+          .getElementById("respuesta")
+          .innerHTML =
+          texto;
+
+        hablar(
+
+            "El proveedor " +
+
+            datos.numeroProveedor +
+
+            " se encuentra en la ubicación " +
+
+            datos.ubicacion
+
+        );
+
+    }
+    catch(error){
+
+        document
+          .getElementById("respuesta")
+          .innerHTML =
+          error;
+
+    }
+
+}
+
 function escuchar(){
 
     const SpeechRecognition =
-        window.SpeechRecognition ||
-        window.webkitSpeechRecognition;
-
-    if(!SpeechRecognition){
-
-        alert("Reconocimiento de voz no disponible");
-
-        return;
-    }
+      window.SpeechRecognition ||
+      window.webkitSpeechRecognition;
 
     const recognition =
-        new SpeechRecognition();
+      new SpeechRecognition();
 
     recognition.lang = "es-MX";
 
     recognition.start();
 
-    recognition.onresult = function(event){
+    recognition.onresult =
+      function(event){
 
-        let texto =
-            event.results[0][0].transcript;
+        const texto =
 
-        document.getElementById("texto").innerHTML =
-            "Escuché: " + texto;
+          event.results[0][0]
+          .transcript;
 
-    };
+        consultar(texto);
+
+      };
 
 }
 
 </script>
 
 </body>
+
 </html>
