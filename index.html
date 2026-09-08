@@ -6,77 +6,113 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<title>Copilot de Almacén</title>
+<title>🤖 Copilot de Almacén</title>
 
 <style>
 
 body{
-    font-family:Arial,sans-serif;
-    background:#eef2f7;
-    margin:0;
+  font-family:Arial,sans-serif;
+  background:#eef2f7;
+  margin:0;
 }
 
 .header{
-    background:#003A8C;
-    color:white;
-    padding:20px;
-    text-align:center;
-    font-size:32px;
-    font-weight:bold;
+  background:#003A8C;
+  color:white;
+  padding:20px;
+  text-align:center;
+  font-size:32px;
+  font-weight:bold;
 }
 
 #chat{
-    max-width:1200px;
-    margin:auto;
-    padding:20px;
-    min-height:500px;
+  max-width:1200px;
+  margin:auto;
+  padding:20px;
+  min-height:500px;
 }
 
 .user{
-    background:#d9ecff;
-    padding:15px;
-    border-radius:15px;
-    margin:10px 0;
-    text-align:right;
+  background:#d9ecff;
+  padding:15px;
+  border-radius:15px;
+  margin:10px 0;
+  text-align:right;
 }
 
 .bot{
-    background:white;
-    padding:15px;
-    border-radius:15px;
-    margin:10px 0;
+  background:white;
+  padding:15px;
+  border-radius:15px;
+  margin:10px 0;
 }
 
 .input-area{
-    position:sticky;
-    bottom:0;
-    background:white;
-    padding:15px;
-    display:flex;
-    gap:10px;
-    border-top:1px solid #ddd;
+  position:sticky;
+  bottom:0;
+  background:white;
+  padding:15px;
+  display:flex;
+  gap:10px;
+  border-top:1px solid #ddd;
 }
 
 input{
-    flex:1;
-    padding:15px;
-    font-size:18px;
-    border-radius:10px;
-    border:1px solid #ccc;
+  flex:1;
+  padding:15px;
+  font-size:20px;
+  border-radius:10px;
+  border:1px solid #ccc;
+}
+
+.search-btn{
+  min-width:80px;
+  font-size:24px;
+}
+
+.mic-btn{
+  min-width:150px;
+  min-height:90px;
+  font-size:48px;
+  font-weight:bold;
+  transition:0.3s;
 }
 
 button{
-    padding:15px 20px;
-    border:none;
-    border-radius:10px;
-    background:#003A8C;
-    color:white;
-    cursor:pointer;
-    font-size:18px;
+  border:none;
+  border-radius:10px;
+  background:#003A8C;
+  color:white;
+  cursor:pointer;
 }
 
 button:hover{
-    background:#002d6e;
+  background:#002d6e;
+}
+
+.mic-ready{
+  background:#003A8C;
+}
+
+.mic-listening{
+  background:#16a34a;
+}
+
+.mic-processing{
+  background:#ea580c;
+}
+
+.escuchado{
+  font-size:14px;
+  color:#666;
+  margin-bottom:10px;
+}
+
+.resultado{
+  margin-top:10px;
+  padding:10px;
+  background:#f7f7f7;
+  border-radius:10px;
 }
 
 </style>
@@ -92,15 +128,26 @@ button:hover{
 <div id="chat">
 
 <div class="bot">
-Hola. Puedes preguntarme:
+Hola.<br><br>
+
+Puedes preguntarme:
+
 <br><br>
+
 • ¿Dónde está 20801?
+
 <br>
+
 • ¿Qué hay en SGMB?
+
 <br>
+
 • ¿Qué proveedores hay en SGMB?
+
 <br>
+
 • ¿Cuántas ubicaciones tiene KYOMX?
+
 </div>
 
 </div>
@@ -112,11 +159,16 @@ id="pregunta"
 placeholder="Escribe tu pregunta..."
 onkeydown="if(event.key==='Enter') enviarPregunta();">
 
-<button onclick="enviarPregunta()">
+<button
+class="search-btn"
+onclick="enviarPregunta()">
 🔍
 </button>
 
-<button onclick="escuchar()">
+<button
+id="micBtn"
+class="mic-btn mic-ready"
+onclick="escuchar()">
 🎤
 </button>
 
@@ -127,314 +179,385 @@ onkeydown="if(event.key==='Enter') enviarPregunta();">
 const API_URL =
 "https://script.google.com/macros/s/AKfycbyDRzY_RdNrnsraSCqJPT1Brs6nrrZPytWM3PuB7biGwOrR2RURaJoIKGjA4g_PzKUDdA/exec";
 
+function textoParaVoz(texto){
+
+  return texto
+
+    .replaceAll("KYOMX","Kio Mex")
+    .replaceAll("TKBCA","Te Ka Be Ce A")
+
+    .replaceAll("SGMB","Ese Ge Em Be")
+    .replaceAll("SGMC","Ese Ge Em Ce")
+
+    .replaceAll("A1","A uno")
+    .replaceAll("A2","A dos")
+    .replaceAll("A3","A tres")
+    .replaceAll("A4","A cuatro")
+    .replaceAll("A5","A cinco")
+
+    .replaceAll(
+      "20801",
+      "veinte mil ochocientos uno"
+    );
+
+}
+
 function hablar(texto){
 
-    speechSynthesis.cancel();
+  speechSynthesis.cancel();
 
-    const voz =
-      new SpeechSynthesisUtterance(texto);
+  texto =
+    textoParaVoz(texto);
 
-    voz.lang = "es-MX";
+  const voz =
+    new SpeechSynthesisUtterance(texto);
 
-    speechSynthesis.speak(voz);
+  voz.lang = "es-MX";
+
+  voz.rate = 0.82;
+  voz.pitch = 1;
+  voz.volume = 1;
+
+  speechSynthesis.speak(voz);
 
 }
 
 function agregarUsuario(texto){
 
-    document.getElementById("chat")
-        .innerHTML +=
-        "<div class='user'>" +
-        texto +
-        "</div>";
+  document.getElementById("chat").innerHTML +=
+    "<div class='user'>" +
+    texto +
+    "</div>";
 
 }
 
 function agregarBot(texto){
 
-    document.getElementById("chat")
-        .innerHTML +=
-        "<div class='bot'>" +
-        texto +
-        "</div>";
+  document.getElementById("chat").innerHTML +=
+    "<div class='bot'>" +
+    texto +
+    "</div>";
 
-    window.scrollTo(
-      0,
-      document.body.scrollHeight
-    );
+  window.scrollTo(
+    0,
+    document.body.scrollHeight
+  );
 
 }
 
 function detectarIntencion(texto){
 
-    texto = texto.toUpperCase();
+  texto =
+    texto.toUpperCase();
 
-    if(
-       texto.includes("CUANTAS") ||
-       texto.includes("CUÁNTAS")
-    ){
-        return "CONTEO";
-    }
+  if(
+    texto.includes("CUANTAS")
+    ||
+    texto.includes("CUÁNTAS")
+  ){
+    return "CONTEO";
+  }
 
-    if(
-       texto.includes("QUE PROVEEDORES") ||
-       texto.includes("QUÉ PROVEEDORES")
-    ){
-        return "PROVEEDORES";
-    }
+  if(
+    texto.includes("QUE PROVEEDORES")
+    ||
+    texto.includes("QUÉ PROVEEDORES")
+  ){
+    return "PROVEEDORES";
+  }
 
-    if(
-       texto.includes("QUE HAY") ||
-       texto.includes("QUÉ HAY")
-    ){
-        return "RUTA";
-    }
+  if(
+    texto.includes("QUE HAY")
+    ||
+    texto.includes("QUÉ HAY")
+  ){
+    return "RUTA";
+  }
 
-    return "DETALLE";
+  return "DETALLE";
 
 }
 
 function limpiarConsulta(texto){
 
-    let numero =
-      texto.match(/\d+/);
+  let numero =
+    texto.match(/\d+/);
 
-    if(numero){
+  if(numero){
 
-        return numero[0];
+    return numero[0];
 
-    }
+  }
 
-    return texto
-      .toUpperCase()
-      .replace("DONDE ESTA","")
-      .replace("DÓNDE ESTÁ","")
-      .replace("QUE HAY","")
-      .replace("QUÉ HAY","")
-      .replace("QUE PROVEEDORES HAY","")
-      .replace("QUÉ PROVEEDORES HAY","")
-      .replace("CUANTAS UBICACIONES TIENE","")
-      .replace("CUÁNTAS UBICACIONES TIENE","")
-      .replace("PROVEEDOR","")
-      .replace("?","")
-      .trim();
+  return texto
+    .toUpperCase()
+    .replace("DONDE ESTA","")
+    .replace("DÓNDE ESTÁ","")
+    .replace("QUE HAY","")
+    .replace("QUÉ HAY","")
+    .replace("QUE PROVEEDORES HAY","")
+    .replace("QUÉ PROVEEDORES HAY","")
+    .replace("CUANTAS UBICACIONES TIENE","")
+    .replace("CUÁNTAS UBICACIONES TIENE","")
+    .replace("PROVEEDOR","")
+    .replace("?","")
+    .trim();
 
 }
 
 async function enviarPregunta(){
 
-    let pregunta =
-      document.getElementById(
-        "pregunta"
-      ).value;
-
-    if(!pregunta) return;
-
+  let pregunta =
     document.getElementById(
       "pregunta"
-    ).value = "";
+    ).value;
 
-    agregarUsuario(
+  if(!pregunta) return;
+
+  document.getElementById(
+    "pregunta"
+  ).value = "";
+
+  agregarUsuario(
+    pregunta
+  );
+
+  let intencion =
+    detectarIntencion(
       pregunta
     );
 
-    let intencion =
-      detectarIntencion(
-        pregunta
+  let consulta =
+    limpiarConsulta(
+      pregunta
+    );
+
+  try{
+
+    const response =
+      await fetch(
+        API_URL +
+        "?api=1&buscar=" +
+        encodeURIComponent(
+          consulta
+        )
       );
 
-    let consulta =
-      limpiarConsulta(
-        pregunta
-      );
+    const datos =
+      await response.json();
 
-    try{
-
-      const response =
-        await fetch(
-          API_URL +
-          "?api=1&buscar=" +
-          encodeURIComponent(
-            consulta
-          )
-        );
-
-      const datos =
-        await response.json();
-
-      if(!datos.encontrado){
-
-          agregarBot(
-            "No encontré información."
-          );
-
-          hablar(
-            "No encontré información."
-          );
-
-          return;
-
-      }
-
-      if(
-         intencion == "PROVEEDORES"
-      ){
-
-          let proveedores =
-            [...new Set(
-              datos.resultados.map(
-                r => r.proveedor
-              )
-            )];
-
-          let html =
-            proveedores.join(
-              "<br>"
-            );
-
-          agregarBot(html);
-
-          hablar(
-            "Encontré " +
-            proveedores.length +
-            " proveedores."
-          );
-
-          return;
-
-      }
-
-      if(
-         intencion == "CONTEO"
-      ){
-
-          let ubicaciones =
-            datos.resultados.map(
-              r => r.ubicacion
-            );
-
-          agregarBot(
-
-            "Ubicaciones: " +
-            ubicaciones.length +
-
-            "<br><br>" +
-
-            ubicaciones.join(", ")
-
-          );
-
-          hablar(
-
-            "Encontré " +
-
-            ubicaciones.length +
-
-            " ubicaciones."
-
-          );
-
-          return;
-
-      }
-
-      let grupos = {};
-
-      datos.resultados.forEach(function(r){
-
-          if(!grupos[r.proveedor]){
-
-              grupos[r.proveedor] = [];
-
-          }
-
-          grupos[r.proveedor]
-            .push(r.ubicacion);
-
-      });
-
-      let html = "";
-
-      let mensajeVoz = "";
-
-      for(let proveedor in grupos){
-
-          html +=
-
-          "<b>📦 " +
-          proveedor +
-          "</b><br>" +
-
-          "📍 " +
-
-          grupos[proveedor]
-            .join(", ") +
-
-          "<br><br>";
-
-          mensajeVoz +=
-
-          proveedor +
-
-          " en " +
-
-          grupos[proveedor]
-            .join(", ") +
-
-          ". ";
-
-      }
-
-      agregarBot(html);
-
-      hablar(mensajeVoz);
-
-    }
-    catch(error){
+    if(!datos.encontrado){
 
       agregarBot(
-        "Error: " + error
+        "❌ No encontré información."
       );
 
-    }
-
-}
-
-function escuchar(){
-
-    const SpeechRecognition =
-      window.SpeechRecognition ||
-      window.webkitSpeechRecognition;
-
-    if(!SpeechRecognition){
-
-      alert(
-        "Reconocimiento no disponible"
+      hablar(
+        "No encontré información."
       );
 
       return;
 
     }
 
-    const recognition =
-      new SpeechRecognition();
+    if(
+      intencion ===
+      "PROVEEDORES"
+    ){
 
-    recognition.lang = "es-MX";
-
-    recognition.start();
-
-    recognition.onresult =
-      function(event){        document
-          .getElementById(
-            "pregunta"
+      let proveedores =
+        [...new Set(
+          datos.resultados.map(
+            r => r.proveedor
           )
-          .value =
-          event.results[0][0]
-          .transcript;
+        )];
 
-        enviarPregunta();
+      agregarBot(
+        proveedores.join("<br>")
+      );
 
-      };
+      hablar(
+        "Encontré " +
+        proveedores.length +
+        " proveedores."
+      );
+
+      return;
+
+    }
+
+    if(
+      intencion ===
+      "CONTEO"
+    ){
+
+      let ubicaciones =
+        datos.resultados.map(
+          r => r.ubicacion
+        );
+
+      agregarBot(
+
+        "Ubicaciones: " +
+        ubicaciones.length +
+
+        "<br><br>" +
+
+        ubicaciones.join(", ")
+
+      );
+
+      hablar(
+
+        "Encontré " +
+
+        ubicaciones.length +
+
+        " ubicaciones."
+
+      );
+
+      return;
+
+    }
+
+    let grupos = {};
+
+    datos.resultados.forEach(function(r){
+
+      if(!grupos[r.proveedor]){
+
+        grupos[r.proveedor] = [];
+
+      }
+
+      grupos[r.proveedor]
+        .push(r.ubicacion);
+
+    });
+
+    let html = "";
+
+    let mensajeVoz = "";
+
+    for(let proveedor in grupos){
+
+      html +=
+
+        "<div class='resultado'>" +
+
+        "<b>📦 " +
+        proveedor +
+        "</b><br>" +
+
+        "📍 " +
+
+        grupos[proveedor]
+          .join(", ") +
+
+        "</div>";
+
+      mensajeVoz +=
+
+        "El proveedor " +
+
+        proveedor +
+
+        " se encuentra en las ubicaciones " +
+
+        grupos[proveedor]
+          .join(", ") +
+
+        ". ";
+
+    }
+
+    agregarBot(html);
+
+    hablar(mensajeVoz);
+
+  }
+  catch(error){
+
+    agregarBot(
+      "Error: " + error
+    );
+
+  }
+
+}
+
+function escuchar(){
+
+  const SpeechRecognition =
+    window.SpeechRecognition ||
+    window.webkitSpeechRecognition;
+
+  if(!SpeechRecognition){
+
+    alert(
+      "Reconocimiento no disponible"
+    );
+
+    return;
+
+  }
+
+  const micBtn =
+    document.getElementById(
+      "micBtn"
+    );
+
+  micBtn.className =
+    "mic-btn mic-listening";
+
+  const recognition =
+    new SpeechRecognition();
+
+  recognition.lang = "es-MX";
+
+  recognition.start();
+
+  recognition.onresult =
+    function(event){
+
+      const texto =
+        event.results[0][0]
+        .transcript;
+
+      agregarBot(
+        "<div class='escuchado'>🎤 Escuché:</div>" +
+        texto
+      );
+
+      micBtn.className =
+        "mic-btn mic-processing";
+
+      document
+        .getElementById(
+          "pregunta"
+        )
+        .value =
+        texto;
+
+      enviarPregunta();
+
+      setTimeout(function(){
+
+        micBtn.className =
+          "mic-btn mic-ready";
+
+      },1000);
+
+    };
+
+  recognition.onerror =
+    function(){
+
+      micBtn.className =
+        "mic-btn mic-ready";
+
+    };
 
 }
 
