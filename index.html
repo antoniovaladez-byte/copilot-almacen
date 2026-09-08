@@ -296,11 +296,27 @@ function limpiarConsulta(texto){
   let numero =
     texto.match(/\d+/);
 
-  if(numero){
+ if(numero){
 
-    return numero[0];
+    let valor = numero[0];
 
-  }
+    if(valor.length < 5){
+
+        agregarBot(
+          "⚠️ El número detectado tiene menos de 5 dígitos. Inténtalo nuevamente."
+        );
+
+        hablar(
+          "El número detectado tiene menos de cinco dígitos. Por favor repite la consulta."
+        );
+
+        return null;
+
+    }
+
+    return valor;
+
+}
 
   return texto
     .toUpperCase()
@@ -344,6 +360,9 @@ async function enviarPregunta(){
     limpiarConsulta(
       pregunta
     );
+  if(!consulta){
+    return;
+}
 
   try{
 
