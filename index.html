@@ -33,6 +33,10 @@ button{
     cursor:pointer;
 }
 
+button:hover{
+    background:#002d6e;
+}
+
 #respuesta{
     margin-top:30px;
     font-size:28px;
@@ -73,10 +77,13 @@ const API_URL =
 
 function hablar(texto){
 
+    speechSynthesis.cancel();
+
     const voz =
       new SpeechSynthesisUtterance(texto);
 
     voz.lang = "es-MX";
+    voz.rate = 1;
 
     speechSynthesis.speak(voz);
 
@@ -85,6 +92,10 @@ function hablar(texto){
 async function consultar(valor){
 
     try{
+
+        document.getElementById("respuesta")
+            .innerHTML =
+            "🔎 Buscando...";
 
         const url =
             API_URL +
@@ -102,7 +113,7 @@ async function consultar(valor){
             document
               .getElementById("respuesta")
               .innerHTML =
-              "No encontré información";
+              "❌ No encontré información";
 
             hablar(
               "No encontré información"
@@ -113,23 +124,23 @@ async function consultar(valor){
 
         const texto =
 
-            "Proveedor " +
+            "📦 Proveedor: " +
             datos.proveedor +
             "<br><br>" +
 
-            "Número " +
+            "🔢 Número: " +
             datos.numeroProveedor +
             "<br><br>" +
 
-            "Ubicación " +
+            "📍 Ubicación: " +
             datos.ubicacion +
             "<br><br>" +
 
-            "Ruta " +
+            "🚛 Ruta: " +
             datos.ruta +
             "<br><br>" +
 
-            "Altura " +
+            "📏 Altura: " +
             datos.alturaMaxima;
 
         document
@@ -139,13 +150,25 @@ async function consultar(valor){
 
         hablar(
 
-            "El proveedor " +
+          "Proveedor " +
 
-            datos.numeroProveedor +
+          datos.proveedor +
 
-            " se encuentra en la ubicación " +
+          ". Número " +
 
-            datos.ubicacion
+          datos.numeroProveedor +
+
+          ". Ubicación " +
+
+          datos.ubicacion +
+
+          ". Ruta " +
+
+          datos.ruta +
+
+          ". Altura máxima " +
+
+          datos.alturaMaxima
 
         );
 
@@ -155,7 +178,7 @@ async function consultar(valor){
         document
           .getElementById("respuesta")
           .innerHTML =
-          error;
+          "Error: " + error;
 
     }
 
@@ -167,22 +190,70 @@ function escuchar(){
       window.SpeechRecognition ||
       window.webkitSpeechRecognition;
 
+    if(!SpeechRecognition){
+
+      alert(
+        "Reconocimiento de voz no disponible"
+      );
+
+      return;
+
+    }
+
     const recognition =
       new SpeechRecognition();
 
     recognition.lang = "es-MX";
-
     recognition.start();
 
     recognition.onresult =
       function(event){
 
-        const texto =
-
+        let texto =
           event.results[0][0]
           .transcript;
 
-        consultar(texto);
+        texto =
+          texto.toUpperCase();
+
+        console.log(
+          "Texto original:",
+          texto
+        );
+
+        let consulta =
+          texto;
+
+        let numero =
+          texto.match(/\d+/);
+
+        if(numero){
+
+          consulta =
+            numero[0];
+
+        }
+        else{
+
+          consulta =
+            texto
+              .replace("DONDE ESTA","")
+              .replace("DÓNDE ESTÁ","")
+              .replace("BUSCAR","")
+              .replace("BUSCA","")
+              .replace("PROVEEDOR","")
+              .replace("UBICACION","")
+              .replace("UBICACIÓN","")
+              .replace("RUTA","")
+              .replace("QUE HAY EN","")
+              .replace("QUÉ HAY EN","")
+              .replace("MUÉSTRAME","")
+              .replace("MUESTRAME","")
+              .trim();
+
+        }
+
+        consultar(consulta);
 
       };
 
