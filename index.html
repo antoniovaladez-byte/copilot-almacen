@@ -6,9 +6,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<title>
-Copilot de Almacén
-</title>
+<title>Copilot de Almacén</title>
 
 <style>
 
@@ -37,17 +35,18 @@ button:hover{
     background:#002d6e;
 }
 
-#respuesta{
-    margin-top:30px;
-    font-size:28px;
-    font-weight:bold;
-}
-
 .card{
     background:white;
     padding:25px;
     border-radius:15px;
     margin-top:20px;
+}
+
+.resultado{
+    text-align:left;
+    margin-top:15px;
+    padding:15px;
+    border-bottom:1px solid #ddd;
 }
 
 </style>
@@ -56,9 +55,7 @@ button:hover{
 
 <body>
 
-<h1>
-🤖 Copilot de Almacén
-</h1>
+<h1>🤖 Copilot de Almacén</h1>
 
 <button onclick="escuchar()">
 🎤 Hablar
@@ -83,7 +80,6 @@ function hablar(texto){
       new SpeechSynthesisUtterance(texto);
 
     voz.lang = "es-MX";
-    voz.rate = 1;
 
     speechSynthesis.speak(voz);
 
@@ -108,7 +104,7 @@ async function consultar(valor){
         const datos =
             await respuesta.json();
 
-        if(datos.encontrado === false){
+        if(!datos.encontrado){
 
             document
               .getElementById("respuesta")
@@ -120,57 +116,60 @@ async function consultar(valor){
             );
 
             return;
+
         }
 
-        const texto =
+        let html =
+          "<h2>" +
+          datos.total +
+          " resultado(s) encontrado(s)</h2>";
 
-            "📦 Proveedor: " +
-            datos.proveedor +
-            "<br><br>" +
+        let mensajeVoz =
+          "Encontré " +
+          datos.total +
+          " resultado(s). ";
 
-            "🔢 Número: " +
-            datos.numeroProveedor +
-            "<br><br>" +
+        datos.resultados.forEach(function(r){
 
-            "📍 Ubicación: " +
-            datos.ubicacion +
-            "<br><br>" +
+            html +=
 
-            "🚛 Ruta: " +
-            datos.ruta +
-            "<br><br>" +
+            "<div class='resultado'>" +
 
-            "📏 Altura: " +
-            datos.alturaMaxima;
+            "<b>📍 Ubicación:</b> " +
+            r.ubicacion +
+
+            "<br><b>📦 Proveedor:</b> " +
+            r.proveedor +
+
+            "<br><b>🔢 Número:</b> " +
+            r.numeroProveedor +
+
+            "<br><b>🚛 Ruta:</b> " +
+            r.ruta +
+
+            "<br><b>📏 Altura:</b> " +
+            r.alturaMaxima +
+
+            "</div>";
+
+            mensajeVoz +=
+
+            "Ubicación " +
+            r.ubicacion +
+
+            ", proveedor " +
+            r.proveedor +
+
+            ". ";
+
+        });
 
         document
           .getElementById("respuesta")
           .innerHTML =
-          texto;
+          html;
 
-        hablar(
-
-          "Proveedor " +
-
-          datos.proveedor +
-
-          ". Número " +
-
-          datos.numeroProveedor +
-
-          ". Ubicación " +
-
-          datos.ubicacion +
-
-          ". Ruta " +
-
-          datos.ruta +
-
-          ". Altura máxima " +
-
-          datos.alturaMaxima
-
-        );
+        hablar(mensajeVoz);
 
     }
     catch(error){
@@ -192,11 +191,11 @@ function escuchar(){
 
     if(!SpeechRecognition){
 
-      alert(
-        "Reconocimiento de voz no disponible"
-      );
+        alert(
+          "Reconocimiento de voz no disponible"
+        );
 
-      return;
+        return;
 
     }
 
@@ -204,6 +203,7 @@ function escuchar(){
       new SpeechRecognition();
 
     recognition.lang = "es-MX";
+
     recognition.start();
 
     recognition.onresult =
@@ -216,11 +216,6 @@ function escuchar(){
         texto =
           texto.toUpperCase();
 
-        console.log(
-          "Texto original:",
-          texto
-        );
-
         let consulta =
           texto;
 
@@ -229,14 +224,14 @@ function escuchar(){
 
         if(numero){
 
-          consulta =
-            numero[0];
+            consulta =
+              numero[0];
 
         }
         else{
 
-          consulta =
-            texto
+            consulta =
+              texto
               .replace("DONDE ESTA","")
               .replace("DÓNDE ESTÁ","")
               .replace("BUSCAR","")
