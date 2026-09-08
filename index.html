@@ -13,40 +13,70 @@
 body{
     font-family:Arial,sans-serif;
     background:#eef2f7;
-    text-align:center;
-    padding:40px;
+    margin:0;
 }
 
-h1{
-    color:#003A8C;
+.header{
+    background:#003A8C;
+    color:white;
+    padding:20px;
+    text-align:center;
+    font-size:32px;
+    font-weight:bold;
+}
+
+#chat{
+    max-width:1200px;
+    margin:auto;
+    padding:20px;
+    min-height:500px;
+}
+
+.user{
+    background:#d9ecff;
+    padding:15px;
+    border-radius:15px;
+    margin:10px 0;
+    text-align:right;
+}
+
+.bot{
+    background:white;
+    padding:15px;
+    border-radius:15px;
+    margin:10px 0;
+}
+
+.input-area{
+    position:sticky;
+    bottom:0;
+    background:white;
+    padding:15px;
+    display:flex;
+    gap:10px;
+    border-top:1px solid #ddd;
+}
+
+input{
+    flex:1;
+    padding:15px;
+    font-size:18px;
+    border-radius:10px;
+    border:1px solid #ccc;
 }
 
 button{
-    padding:20px 40px;
-    font-size:24px;
+    padding:15px 20px;
     border:none;
-    border-radius:12px;
+    border-radius:10px;
     background:#003A8C;
     color:white;
     cursor:pointer;
+    font-size:18px;
 }
 
 button:hover{
     background:#002d6e;
-}
-
-.card{
-    background:white;
-    padding:25px;
-    border-radius:15px;
-    margin-top:20px;
-}
-
-.resultado{
-    text-align:left;
-    margin-top:15px;
-    padding:15px;
-    border-bottom:1px solid #ddd;
 }
 
 </style>
@@ -55,15 +85,40 @@ button:hover{
 
 <body>
 
-<h1>🤖 Copilot de Almacén</h1>
+<div class="header">
+🤖 Copilot de Almacén
+</div>
 
-<button onclick="escuchar()">
-🎤 Hablar
+<div id="chat">
+
+<div class="bot">
+Hola. Puedes preguntarme:
+<br><br>
+• ¿Dónde está 20801?
+<br>
+• ¿Qué hay en SGMB?
+<br>
+• ¿Qué proveedores hay en SGMB?
+<br>
+• ¿Cuántas ubicaciones tiene KYOMX?
+</div>
+
+</div>
+
+<div class="input-area">
+
+<input
+id="pregunta"
+placeholder="Escribe tu pregunta..."
+onkeydown="if(event.key==='Enter') enviarPregunta();">
+
+<button onclick="enviarPregunta()">
+🔍
 </button>
 
-<div id="respuesta" class="card">
-
-Esperando consulta...
+<button onclick="escuchar()">
+🎤
+</button>
 
 </div>
 
@@ -85,99 +140,261 @@ function hablar(texto){
 
 }
 
-async function consultar(valor){
+function agregarUsuario(texto){
+
+    document.getElementById("chat")
+        .innerHTML +=
+        "<div class='user'>" +
+        texto +
+        "</div>";
+
+}
+
+function agregarBot(texto){
+
+    document.getElementById("chat")
+        .innerHTML +=
+        "<div class='bot'>" +
+        texto +
+        "</div>";
+
+    window.scrollTo(
+      0,
+      document.body.scrollHeight
+    );
+
+}
+
+function detectarIntencion(texto){
+
+    texto = texto.toUpperCase();
+
+    if(
+       texto.includes("CUANTAS") ||
+       texto.includes("CUÁNTAS")
+    ){
+        return "CONTEO";
+    }
+
+    if(
+       texto.includes("QUE PROVEEDORES") ||
+       texto.includes("QUÉ PROVEEDORES")
+    ){
+        return "PROVEEDORES";
+    }
+
+    if(
+       texto.includes("QUE HAY") ||
+       texto.includes("QUÉ HAY")
+    ){
+        return "RUTA";
+    }
+
+    return "DETALLE";
+
+}
+
+function limpiarConsulta(texto){
+
+    let numero =
+      texto.match(/\d+/);
+
+    if(numero){
+
+        return numero[0];
+
+    }
+
+    return texto
+      .toUpperCase()
+      .replace("DONDE ESTA","")
+      .replace("DÓNDE ESTÁ","")
+      .replace("QUE HAY","")
+      .replace("QUÉ HAY","")
+      .replace("QUE PROVEEDORES HAY","")
+      .replace("QUÉ PROVEEDORES HAY","")
+      .replace("CUANTAS UBICACIONES TIENE","")
+      .replace("CUÁNTAS UBICACIONES TIENE","")
+      .replace("PROVEEDOR","")
+      .replace("?","")
+      .trim();
+
+}
+
+async function enviarPregunta(){
+
+    let pregunta =
+      document.getElementById(
+        "pregunta"
+      ).value;
+
+    if(!pregunta) return;
+
+    document.getElementById(
+      "pregunta"
+    ).value = "";
+
+    agregarUsuario(
+      pregunta
+    );
+
+    let intencion =
+      detectarIntencion(
+        pregunta
+      );
+
+    let consulta =
+      limpiarConsulta(
+        pregunta
+      );
 
     try{
 
-        document.getElementById("respuesta")
-            .innerHTML =
-            "🔎 Buscando...";
+      const response =
+        await fetch(
+          API_URL +
+          "?api=1&buscar=" +
+          encodeURIComponent(
+            consulta
+          )
+        );
 
-        const url =
-            API_URL +
-            "?api=1&buscar=" +
-            encodeURIComponent(valor);
+      const datos =
+        await response.json();
 
-        const respuesta =
-            await fetch(url);
+      if(!datos.encontrado){
 
-        const datos =
-            await respuesta.json();
+          agregarBot(
+            "No encontré información."
+          );
 
-        if(!datos.encontrado){
+          hablar(
+            "No encontré información."
+          );
 
-            document
-              .getElementById("respuesta")
-              .innerHTML =
-              "❌ No encontré información";
+          return;
 
-            hablar(
-              "No encontré información"
+      }
+
+      if(
+         intencion == "PROVEEDORES"
+      ){
+
+          let proveedores =
+            [...new Set(
+              datos.resultados.map(
+                r => r.proveedor
+              )
+            )];
+
+          let html =
+            proveedores.join(
+              "<br>"
             );
 
-            return;
+          agregarBot(html);
 
-        }
+          hablar(
+            "Encontré " +
+            proveedores.length +
+            " proveedores."
+          );
 
-        let html =
-          "<h2>" +
-          datos.total +
-          " resultado(s) encontrado(s)</h2>";
+          return;
 
-        let mensajeVoz =
-          "Encontré " +
-          datos.total +
-          " resultado(s). ";
+      }
 
-        datos.resultados.forEach(function(r){
+      if(
+         intencion == "CONTEO"
+      ){
 
-            html +=
+          let ubicaciones =
+            datos.resultados.map(
+              r => r.ubicacion
+            );
 
-            "<div class='resultado'>" +
+          agregarBot(
 
-            "<b>📍 Ubicación:</b> " +
-            r.ubicacion +
+            "Ubicaciones: " +
+            ubicaciones.length +
 
-            "<br><b>📦 Proveedor:</b> " +
-            r.proveedor +
+            "<br><br>" +
 
-            "<br><b>🔢 Número:</b> " +
-            r.numeroProveedor +
+            ubicaciones.join(", ")
 
-            "<br><b>🚛 Ruta:</b> " +
-            r.ruta +
+          );
 
-            "<br><b>📏 Altura:</b> " +
-            r.alturaMaxima +
+          hablar(
 
-            "</div>";
+            "Encontré " +
 
-            mensajeVoz +=
+            ubicaciones.length +
 
-            "Ubicación " +
-            r.ubicacion +
+            " ubicaciones."
 
-            ", proveedor " +
-            r.proveedor +
+          );
 
-            ". ";
+          return;
 
-        });
+      }
 
-        document
-          .getElementById("respuesta")
-          .innerHTML =
-          html;
+      let grupos = {};
 
-        hablar(mensajeVoz);
+      datos.resultados.forEach(function(r){
+
+          if(!grupos[r.proveedor]){
+
+              grupos[r.proveedor] = [];
+
+          }
+
+          grupos[r.proveedor]
+            .push(r.ubicacion);
+
+      });
+
+      let html = "";
+
+      let mensajeVoz = "";
+
+      for(let proveedor in grupos){
+
+          html +=
+
+          "<b>📦 " +
+          proveedor +
+          "</b><br>" +
+
+          "📍 " +
+
+          grupos[proveedor]
+            .join(", ") +
+
+          "<br><br>";
+
+          mensajeVoz +=
+
+          proveedor +
+
+          " en " +
+
+          grupos[proveedor]
+            .join(", ") +
+
+          ". ";
+
+      }
+
+      agregarBot(html);
+
+      hablar(mensajeVoz);
 
     }
     catch(error){
 
-        document
-          .getElementById("respuesta")
-          .innerHTML =
-          "Error: " + error;
+      agregarBot(
+        "Error: " + error
+      );
 
     }
 
@@ -191,11 +408,11 @@ function escuchar(){
 
     if(!SpeechRecognition){
 
-        alert(
-          "Reconocimiento de voz no disponible"
-        );
+      alert(
+        "Reconocimiento no disponible"
+      );
 
-        return;
+      return;
 
     }
 
@@ -208,54 +425,3 @@ function escuchar(){
 
     recognition.onresult =
       function(event){
-
-        let texto =
-          event.results[0][0]
-          .transcript;
-
-        texto =
-          texto.toUpperCase();
-
-        let consulta =
-          texto;
-
-        let numero =
-          texto.match(/\d+/);
-
-        if(numero){
-
-            consulta =
-              numero[0];
-
-        }
-        else{
-
-            consulta =
-              texto
-              .replace("DONDE ESTA","")
-              .replace("DÓNDE ESTÁ","")
-              .replace("BUSCAR","")
-              .replace("BUSCA","")
-              .replace("PROVEEDOR","")
-              .replace("UBICACION","")
-              .replace("UBICACIÓN","")
-              .replace("RUTA","")
-              .replace("QUE HAY EN","")
-              .replace("QUÉ HAY EN","")
-              .replace("MUÉSTRAME","")
-              .replace("MUESTRAME","")
-              .trim();
-
-        }
-
-        consultar(consulta);
-
-      };
-
-}
-
-</script>
-
-</body>
-
-</html>
