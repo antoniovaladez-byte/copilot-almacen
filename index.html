@@ -109,10 +109,23 @@ button:hover{
 }
 
 .resultado{
-  margin-top:10px;
-  padding:10px;
-  background:#f7f7f7;
-  border-radius:10px;
+
+    margin-top:15px;
+
+    padding:20px;
+
+    background:white;
+
+    border-radius:15px;
+
+    border-left:8px solid #003A8C;
+
+    box-shadow:0 2px 8px rgba(0,0,0,.10);
+
+    font-size:22px;
+
+    line-height:1.5;
+
 }
 
 </style>
@@ -421,56 +434,88 @@ async function enviarPregunta(){
 
     }
 
-    let grupos = {};
+   let grupos = {};
 
-    datos.resultados.forEach(function(r){
+datos.resultados.forEach(function(r){
 
-      if(!grupos[r.proveedor]){
+    if(!grupos[r.proveedor]){
 
-        grupos[r.proveedor] = [];
+        grupos[r.proveedor] = {
 
-      }
+            numero:
+              r.numeroProveedor,
 
-      grupos[r.proveedor]
-        .push(r.ubicacion);
+            ruta:
+              r.ruta,
 
-    });
+            altura:
+              r.alturaMaxima,
 
-    let html = "";
+            ubicaciones: []
 
-    let mensajeVoz = "";
-
-    for(let proveedor in grupos){
-
-      html +=
-
-        "<div class='resultado'>" +
-
-        "<b>📦 " +
-        proveedor +
-        "</b><br>" +
-
-        "📍 " +
-
-        grupos[proveedor]
-          .join(", ") +
-
-        "</div>";
-
-      mensajeVoz +=
-
-        "El proveedor " +
-
-        proveedor +
-
-        " se encuentra en las ubicaciones " +
-
-        grupos[proveedor]
-          .join(", ") +
-
-        ". ";
+        };
 
     }
+
+    grupos[r.proveedor]
+      .ubicaciones
+      .push(r.ubicacion);
+
+});
+
+let html = "";
+
+let mensajeVoz = "";
+
+for(let proveedor in grupos){
+
+    const g =
+      grupos[proveedor];
+
+    html +=
+
+      "<div class='resultado'>" +
+
+      "<div><b>📦 " +
+      proveedor +
+      "</b></div><br>" +
+
+      "<div>🔢 " +
+      g.numero +
+      "</div><br>" +
+
+      "<div>📍 " +
+      g.ubicaciones.join(", ") +
+      "</div><br>" +
+
+      "<div>🚛 " +
+      g.ruta +
+      "</div><br>" +
+
+      "<div>📏 " +
+      g.altura +
+      "</div>" +
+
+      "</div>";
+
+    mensajeVoz +=
+
+      "El proveedor " +
+
+      proveedor +
+
+      " número " +
+
+      g.numero +
+
+      " se encuentra en las ubicaciones " +
+
+      g.ubicaciones.join(", ") +
+
+      ". ";
+
+}
+
 
     agregarBot(html);
 
@@ -524,12 +569,10 @@ function escuchar(){
       const texto =
         event.results[0][0]
         .transcript;
-
       agregarBot(
-        "<div class='escuchado'>🎤 Escuché:</div>" +
-        texto
-      );
-
+"<div class='escuchado'>🎤 Escuché:</div>" +
+texto
+);
       micBtn.className =
         "mic-btn mic-processing";
 
