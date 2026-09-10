@@ -293,12 +293,47 @@ function detectarIntencion(texto){
 
 function limpiarConsulta(texto){
 
-  let numero =
-    texto.match(/\d+/);
+  function limpiarConsulta(texto){
 
- if(numero){
+  let numeroCompleto =
+    texto.match(/\d+/g);
 
-    let valor = numero[0];
+  if(numeroCompleto){
+
+    let valor =
+      numeroCompleto.join("");
+
+    if(valor.length < 5){
+
+        agregarBot(
+          "⚠️ El número detectado tiene menos de 5 dígitos. Inténtalo nuevamente."
+        );
+
+        hablar(
+          "El número detectado tiene menos de cinco dígitos. Por favor repite la consulta."
+        );
+
+        return null;
+
+    }
+
+    if(valor.length > 5){
+
+        agregarBot(
+          "⚠️ El número detectado tiene más de 5 dígitos. Inténtalo nuevamente."
+        );
+
+        hablar(
+          "El número detectado tiene más de cinco dígitos. Por favor repite la consulta."
+        );
+
+        return null;
+
+    }
+
+    return valor;
+
+}
 
     if(valor.length < 5){
 
