@@ -127,9 +127,19 @@
 
 <body>
 
-  <div class="header">
-    🤖 Copilot de Almacén
+ <div class="header">
+
+  penske-logo.png
+
+  <div class="titulo">
+    BUSCADOR DE UBICACIONES
   </div>
+
+  <div class="subtitulo">
+    Proveedores • Rutas • Ubicaciones
+  </div>
+
+</div>
 
   <div id="chat">
     <div class="bot">
@@ -311,57 +321,65 @@
        LIMPIAR CONSULTA
     ========================= */
 
-    function limpiarConsulta(texto) {
+ function limpiarConsulta(texto) {
 
-      const numeros =
-        texto.match(/\d+/g);
+  const textoOriginal =
+    texto.toUpperCase().trim();
 
-      /*
-       * Si encontramos números,
-       * usamos únicamente el número.
-       */
-      if (numeros) {
+  // Permitir ubicaciones tipo A1, A10, B5, C12
+  if (/^[A-Z]+[0-9]+$/i.test(textoOriginal)) {
+    return textoOriginal;
+  }
 
-        const valor =
-          numeros.join("");
+  const numeros =
+    texto.match(/\d+/g);
 
-        if (valor.length !== 5) {
+  if (numeros) {
 
-          const mensaje =
-            valor.length < 5
-              ? "⚠️ El número detectado tiene menos de 5 dígitos. Inténtalo nuevamente."
-              : "⚠️ El número detectado tiene más de 5 dígitos. Inténtalo nuevamente.";
+    const valor =
+      numeros.join("");
 
-          agregarBot(mensaje);
+    // Solo validar longitud si parece proveedor numérico
+    if (/^\d+$/.test(valor)) {
 
-          hablar(
-            valor.length < 5
-              ? "El número detectado tiene menos de cinco dígitos."
-              : "El número detectado tiene más de cinco dígitos."
-          );
+      if (valor.length !== 5) {
 
-          return null;
-        }
+        const mensaje =
+          valor.length < 5
+            ? "⚠️ El número detectado tiene menos de 5 dígitos. Inténtalo nuevamente."
+            : "⚠️ El número detectado tiene más de 5 dígitos. Inténtalo nuevamente.";
 
-        return valor;
+        agregarBot(mensaje);
+
+        hablar(
+          valor.length < 5
+            ? "El número detectado tiene menos de cinco dígitos."
+            : "El número detectado tiene más de cinco dígitos."
+        );
+
+        return null;
+
       }
 
-      /*
-       * Quitamos las palabras que solamente
-       * sirven para formular la pregunta.
-       */
-      return texto
-        .toUpperCase()
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
-        .replace(/\bDONDE ESTA\b/g, "")
-        .replace(/\bQUE HAY\b/g, "")
-        .replace(/\bQUE PROVEEDORES HAY\b/g, "")
-        .replace(/\bCUANTAS UBICACIONES TIENE\b/g, "")
-        .replace(/\bPROVEEDOR\b/g, "")
-        .replace(/[?¿]/g, "")
-        .trim();
+      return valor;
+
     }
+
+  }
+
+  return texto
+    .toUpperCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\bDONDE ESTA\b/g, "")
+    .replace(/\bQUE HAY\b/g, "")
+    .replace(/\bQUE PROVEEDORES HAY\b/g, "")
+    .replace(/\bCUANTAS UBICACIONES TIENE\b/g, "")
+    .replace(/\bPROVEEDOR\b/g, "")
+    .replace(/[?¿]/g, "")
+    .trim();
+
+}
 
 
     /* =========================
